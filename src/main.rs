@@ -24,6 +24,7 @@ fn build_mouse() -> Result<evdev::uinput::VirtualDevice, Box<dyn std::error::Err
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Создаю виртуальную мышь...");
     let mut mouse = build_mouse()?;
+    std::thread::sleep(std::time::Duration::from_millis(200));
     println!("Мышь создана!");
 
     // Выводим путь устройства
@@ -32,19 +33,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Доступна по пути: {}", path.display());
     }
 
-    // Несколько движений с задержками
-    for i in 0..5 {
+    for i in 0..10 {
         println!("Движение {}...", i + 1);
 
-        let x = InputEvent::new(EventType::RELATIVE, RelativeAxisType::REL_X.0, 50);
-        let y = InputEvent::new(EventType::RELATIVE, RelativeAxisType::REL_Y.0, 50);
+        let x = InputEvent::new(EventType::RELATIVE, RelativeAxisType::REL_X.0, 20 - i);
+        let y = InputEvent::new(EventType::RELATIVE, RelativeAxisType::REL_Y.0, 20 - i);
         let syn_rep = InputEvent::new(EventType::SYNCHRONIZATION, Synchronization::SYN_REPORT.0, 0);
 
         mouse.emit(&[x, y, syn_rep])?;
 
-        std::thread::sleep(std::time::Duration::from_millis(500));
+        std::thread::sleep(std::time::Duration::from_millis(25));
     }
-
+    let btn = InputEvent::new(EventType::KEY, Key::BTN_LEFT.0, 1);
+    let syn_rep = InputEvent::new(EventType::SYNCHRONIZATION, Synchronization::SYN_REPORT.0, 0);
+    mouse.emit(&[btn, syn_rep])?;
     println!("Готово!");
     Ok(())
 }
